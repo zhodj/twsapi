@@ -9,22 +9,27 @@
 #endif
 
 #include "PosixTestClient.h"
+#include "glog/logging.h"
 
 const unsigned MAX_ATTEMPTS = 1;
 const unsigned SLEEP_TIME = 10;
 
 int main(int argc, char** argv)
 {
+	//Init glog
+	FLAGS_log_dir = "/tmp/PosixTestClient/";
+	google::InitGoogleLogging(argv[0]);
+
 	const char* host = argc > 1 ? argv[1] : "";
 	unsigned int port = argc > 2 ? atoi(argv[2]) : 7496;
 	int clientId = 0;
 
 	unsigned attempt = 0;
-	printf( "Start of POSIX Socket Client Test %u\n", attempt);
+	LOG(INFO) << "Start of POSIX Socket Client Test " << attempt;
 
 	for (;;) {
 		++attempt;
-		printf( "Attempt %u of %u\n", attempt, MAX_ATTEMPTS);
+		LOG(INFO) << "Attempt " << attempt << " of " << MAX_ATTEMPTS;
 
 		IB::PosixTestClient client;
 
@@ -38,10 +43,10 @@ int main(int argc, char** argv)
 			break;
 		}
 
-		printf( "Sleeping %u seconds before next attempt\n", SLEEP_TIME);
+		LOG(INFO) << "Sleeping " << SLEEP_TIME << " seconds before next attempt";
 		sleep( SLEEP_TIME);
 	}
 
-	printf ( "End of POSIX Socket Client Test\n");
+	LOG(INFO) << "End of POSIX Socket Client Test";
 }
 

@@ -12,11 +12,11 @@ noinst_HEADERS =
 noinst_HEADERS += PosixTestClient.h
 EXTRA_TestPosixSocketClient_SOURCES =
 TestPosixSocketClient_LDADD =
-TestPosixSocketClient_LDADD += $(top_builddir)/PosixSocketClient/libtwsapi.la
+TestPosixSocketClient_LDADD += $(top_builddir)/PosixSocketClient/libtwsapi.la $(top_srcdir)/Lib/glog/libglog.la
 TestPosixSocketClient_CPPFLAGS =
 TestPosixSocketClient_CPPFLAGS += $(AM_CPPFLAGS)
 TestPosixSocketClient_CPPFLAGS += -I$(top_srcdir)/PosixSocketClient/src
-TestPosixSocketClient_CPPFLAGS += -I$(top_srcdir)/Shared
+TestPosixSocketClient_CPPFLAGS += -I$(top_srcdir)/Include/Shared -I$(top_srcdir)/Include
 TestPosixSocketClient_LDFLAGS = $(AM_LDFLAGS)
 
 CLEANFILES =
