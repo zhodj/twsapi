@@ -10,6 +10,8 @@
 Makefile
 Doxyfile
 TestPosixSocketClient/TestPosixSocketClient
+!libglog.a
+!libglog.la
 
 
 ## autotools
