@@ -11,7 +11,7 @@ nodist_header_HEADERS += twsapi_config.h
 twsapi_config.h: config.h API_VersionNum.txt gen_twsapi_config_h \
 	Include/Shared/EClientSocketBaseImpl.h
 	$(srcdir)/gen_twsapi_config_h config.h $(srcdir)/API_VersionNum.txt \
-		$(srcdir)/Shared/EClientSocketBaseImpl.h > $@.tmp \
+		$(srcdir)/Include/Shared/EClientSocketBaseImpl.h > $@.tmp \
 		&& mv $@.tmp $@
 
 dist_doc_DATA =
