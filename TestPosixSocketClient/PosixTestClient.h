@@ -5,6 +5,7 @@
 #define posixtestclient_h__INCLUDED
 
 #include "EWrapper.h"
+#include "glog/logging.h"
 
 #include <memory>
 #include <stdio.h> //printf()
@@ -15,6 +16,8 @@ class EPosixClientSocket;
 
 enum State {
 	ST_CONNECT,
+	ST_REQMKTDATA,
+	ST_REQMKTDATA_ACK,
 	ST_PLACEORDER,
 	ST_PLACEORDER_ACK,
 	ST_CANCELORDER,
@@ -39,10 +42,13 @@ public:
 	bool connect(const char * host, unsigned int port, int clientId = 0);
 	void disconnect() const;
 	bool isConnected() const;
+	void setMktDataType(int mktDataType);
 
 private:
 
 	void reqCurrentTime();
+	void reqMktData();
+	void reqMktDataAck();
 	void placeOrder();
 	void cancelOrder();
 
@@ -103,6 +109,7 @@ public:
 	void positionEnd();
 	void accountSummary( int reqId, const IBString& account, const IBString& tag, const IBString& value, const IBString& curency);
 	void accountSummaryEnd( int reqId);
+	long int genTickerId();
 
 private:
 
@@ -111,6 +118,7 @@ private:
 	time_t m_sleepDeadline;
 
 	OrderId m_orderId;
+	int m_mktDataType;
 };
 
 }

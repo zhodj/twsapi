@@ -10,6 +10,7 @@
 
 #include "Contract.h"
 #include "Order.h"
+#include "Utility.h"
 
 #include <time.h>
 #include <sys/time.h>
@@ -33,6 +34,7 @@ PosixTestClient::PosixTestClient()
 	, m_state(ST_CONNECT)
 	, m_sleepDeadline(0)
 	, m_orderId(0)
+	, m_mktDataType(REALTIME)
 {
 }
 
@@ -68,6 +70,11 @@ bool PosixTestClient::isConnected() const
 	return m_pClient->isConnected();
 }
 
+void PosixTestClient::setMktDataType(int mktDataType)
+{
+	m_mktDataType = mktDataType;
+}
+
 void PosixTestClient::processMessages()
 {
 	fd_set readSet, writeSet;
@@ -78,7 +85,14 @@ void PosixTestClient::processMessages()
 
 	time_t now = time(NULL);
 
+	//LOG(INFO) << "Running state is " << m_state;
 	switch (m_state) {
+	    case ST_REQMKTDATA:
+			reqMktData();
+			break;
+	    case ST_REQMKTDATA_ACK:
+			reqMktDataAck();
+		    break;
 		case ST_PLACEORDER:
 			placeOrder();
 			break;
@@ -161,8 +175,56 @@ void PosixTestClient::reqCurrentTime()
 	m_pClient->reqCurrentTime();
 }
 
+void PosixTestClient::reqMktData()
+{
+	//before reqMktData need reqMktDataType
+	m_pClient->reqMarketDataType(m_mktDataType);
+
+	if(isConnected())
+	{
+		switch(m_mktDataType)
+		{
+		    case REALTIME:
+				LOG(INFO) << "Frozen, Delayed and Delayed-Frozen market data types are disabled";
+				break;
+		    case FROZEN:
+				LOG(INFO) << "Frozen market data type is enabled";
+				break;
+		    case DELAYED:
+				LOG(INFO) << "Delayed market data type is enabled, Delayed-Frozen market data type is disabled";
+				break;
+		}
+	}
+
+	TickerId tickerId = genTickerId();
+	Contract contract;
+	IBString genericTicks = "100,101,104,105,106,107,165,221,225,233,236,258,293,294,295,318";
+
+	//IBString genericTicks = "";
+	contract.symbol = "000561";
+	contract.secType = "STK";
+	contract.expiry = "";
+	contract.strike = 0;
+	contract.right = "";
+	contract.multiplier = "";
+	contract.exchange = "SEHKSZSE";
+	contract.currency = "CNH";
+
+	m_state = ST_REQMKTDATA_ACK;
+	LOG(INFO) << "reqMktData tickerId=" << tickerId << " contract.symbol=" << contract.symbol;
+	m_pClient->reqMktData(tickerId, contract, genericTicks, false);
+}
+
+
+void PosixTestClient::reqMktDataAck()
+{
+	sleep(5);
+	m_state = ST_REQMKTDATA;
+}
+
 void PosixTestClient::placeOrder()
 {
+	/*
 	Contract contract;
 	Order order;
 
@@ -181,6 +243,7 @@ void PosixTestClient::placeOrder()
 	m_state = ST_PLACEORDER_ACK;
 
 	m_pClient->placeOrder( m_orderId, contract, order);
+	*/
 }
 
 void PosixTestClient::cancelOrder()
@@ -214,7 +277,7 @@ void PosixTestClient::nextValidId( OrderId orderId)
 {
 	m_orderId = orderId;
 
-	m_state = ST_PLACEORDER;
+	m_state = ST_REQMKTDATA;
 }
 
 void PosixTestClient::currentTime( long time)
@@ -233,13 +296,27 @@ void PosixTestClient::currentTime( long time)
 
 void PosixTestClient::error(const int id, const int errorCode, const IBString errorString)
 {
-	printf( "Error id=%d, errorCode=%d, msg=%s\n", id, errorCode, errorString.c_str());
+	LOG(INFO) << "Error id=" << id << ", errorCode=" << errorCode << ", msg=" << errorString.c_str();
 
 	if( id == -1 && errorCode == 1100) // if "Connectivity between IB and TWS has been lost"
 		disconnect();
 }
 
-void PosixTestClient::tickPrice( TickerId tickerId, TickType field, double price, int canAutoExecute) {}
+long int PosixTestClient::genTickerId()
+{
+	static char cMsgNo[32] = {0} ;
+	static int index = 0;
+
+	pid_t iPid = getpid() ;
+	snprintf(cMsgNo,sizeof(cMsgNo)-1,"%05u%02d",iPid,index % 100);
+	index++;
+	return atol(cMsgNo) ;
+}
+
+void PosixTestClient::tickPrice( TickerId tickerId, TickType field, double price, int canAutoExecute)
+{
+	LOG(INFO) << "tickerId="  << tickerId << " price=" << price;
+}
 void PosixTestClient::tickSize( TickerId tickerId, TickType field, int size) {}
 void PosixTestClient::tickOptionComputation( TickerId tickerId, TickType tickType, double impliedVol, double delta,
 											 double optPrice, double pvDividend,

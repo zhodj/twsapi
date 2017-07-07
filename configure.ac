@@ -20,7 +20,7 @@ AX_COMPILER_VENDOR
 
 CPPFLAGS="${CPPFLAGS} -DIB_USE_STD_STRING"
 # enable some warnings
-AX_CHECK_COMPILE_FLAG([-Wall],[warnflags="-Wall"])
+AX_CHECK_COMPILE_FLAG([-Wall],[warnflags="-Wall"],[-g])
 # intel's -Wextra is too verbose
 if test "$ax_cv_cxx_compiler_vendor" != "intel"; then
 	AX_CHECK_COMPILE_FLAG([-Wextra],[warnflags="$warnflags -Wextra"])

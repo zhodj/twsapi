@@ -9,10 +9,11 @@
 #endif
 
 #include "PosixTestClient.h"
-#include "glog/logging.h"
 
 const unsigned MAX_ATTEMPTS = 1;
 const unsigned SLEEP_TIME = 10;
+const unsigned IBCONTROLLER_PORT = 7462;
+const unsigned IB_PORT = 7496;
 
 int main(int argc, char** argv)
 {
@@ -21,7 +22,7 @@ int main(int argc, char** argv)
 	google::InitGoogleLogging(argv[0]);
 
 	const char* host = argc > 1 ? argv[1] : "";
-	unsigned int port = argc > 2 ? atoi(argv[2]) : 7496;
+	unsigned int port = argc > 2 ? atoi(argv[2]) : IB_PORT;
 	int clientId = 0;
 
 	unsigned attempt = 0;
@@ -34,6 +35,7 @@ int main(int argc, char** argv)
 		IB::PosixTestClient client;
 
 		client.connect( host, port, clientId);
+		client.setMktDataType(IB::DELAYED);
 
 		while( client.isConnected()) {
 			client.processMessages();
@@ -42,7 +44,6 @@ int main(int argc, char** argv)
 		if( attempt >= MAX_ATTEMPTS) {
 			break;
 		}
-
 		LOG(INFO) << "Sleeping " << SLEEP_TIME << " seconds before next attempt";
 		sleep( SLEEP_TIME);
 	}
