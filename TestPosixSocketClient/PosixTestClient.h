@@ -5,6 +5,7 @@
 #define posixtestclient_h__INCLUDED
 
 #include "EWrapper.h"
+#include "glog/logging.h"
 
 #include <memory>
 #include <stdio.h> //printf()
@@ -21,7 +22,7 @@ enum State {
 	ST_CANCELORDER_ACK,
 	ST_PING,
 	ST_PING_ACK,
-	ST_IDLE
+	ST_IDLE,
 };
 
 

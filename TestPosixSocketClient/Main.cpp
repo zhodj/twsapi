@@ -9,7 +9,6 @@
 #endif
 
 #include "PosixTestClient.h"
-#include "glog/logging.h"
 
 const unsigned MAX_ATTEMPTS = 1;
 const unsigned SLEEP_TIME = 10;
