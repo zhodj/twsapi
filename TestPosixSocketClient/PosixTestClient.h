@@ -5,6 +5,7 @@
 #define posixtestclient_h__INCLUDED
 
 #include "EWrapper.h"
+#include "Common.h"
 #include "glog/logging.h"
 
 #include <memory>
@@ -24,6 +25,8 @@ enum State {
 	ST_CANCELORDER_ACK,
 	ST_PING,
 	ST_PING_ACK,
+	ST_REQPOSITIONS,
+	ST_REQPOSITIONS_ACK,
 	ST_IDLE,
 };
 
@@ -51,6 +54,8 @@ private:
 	void reqMktDataAck();
 	void placeOrder();
 	void cancelOrder();
+	void reqPositions();
+	void reqPositionsAck();
 
 public:
 	// events
@@ -111,6 +116,19 @@ public:
 	void accountSummaryEnd( int reqId);
 	long int genTickerId();
 
+//trade data
+	void initTradeData(Account& account, Stock& stock, IB::Contract& contract, TradeOrder& tradeOrder);
+
+	Account getAccount();
+	Stock getStock();
+	IB::Contract getContract();
+	TradeOrder getTradeOrder();
+
+	void setAccount(Account& account);
+	void setStock(Stock& stock);
+	void setContract(IB::Contract& contract);
+	void setTradeOrder(TradeOrder& tradeOrder);
+
 private:
 
 	std::auto_ptr<EPosixClientSocket> m_pClient;
@@ -119,6 +137,13 @@ private:
 
 	OrderId m_orderId;
 	int m_mktDataType;
+
+private:
+	Account account;
+    Stock stock;
+    IB::Contract contract;
+	TradeOrder tradeOrder;
+
 };
 
 }

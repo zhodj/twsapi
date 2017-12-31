@@ -14,6 +14,7 @@
 
 #include <time.h>
 #include <sys/time.h>
+#include <iostream>
 
 #if defined __INTEL_COMPILER
 # pragma warning (disable:869)
@@ -21,6 +22,8 @@
 # pragma GCC diagnostic ignored "-Wswitch"
 # pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif  /* __INTEL_COMPILER */
+
+using namespace std;
 
 namespace IB {
 
@@ -92,6 +95,12 @@ void PosixTestClient::processMessages()
 			break;
 	    case ST_REQMKTDATA_ACK:
 			reqMktDataAck();
+		    break;
+	    case ST_REQPOSITIONS:
+			reqPositions();
+			break;
+	    case ST_REQPOSITIONS_ACK:
+			reqPositionsAck();
 		    break;
 		case ST_PLACEORDER:
 			placeOrder();
@@ -175,6 +184,18 @@ void PosixTestClient::reqCurrentTime()
 	m_pClient->reqCurrentTime();
 }
 
+void PosixTestClient::reqPositions()
+{
+	m_pClient->reqPositions();
+	m_state = ST_REQPOSITIONS_ACK;
+}
+
+void PosixTestClient::reqPositionsAck()
+{
+	sleep(5);
+	m_state = ST_REQMKTDATA;
+}
+
 void PosixTestClient::reqMktData()
 {
 	//before reqMktData need reqMktDataType
@@ -201,14 +222,14 @@ void PosixTestClient::reqMktData()
 	IBString genericTicks = "100,101,104,105,106,107,165,221,225,233,236,258,293,294,295,318";
 
 	//IBString genericTicks = "";
-	contract.symbol = "000561";
+	contract.symbol = "981";
 	contract.secType = "STK";
 	contract.expiry = "";
 	contract.strike = 0;
 	contract.right = "";
 	contract.multiplier = "";
-	contract.exchange = "SEHKSZSE";
-	contract.currency = "CNH";
+	contract.exchange = "SEHK";
+	contract.currency = "HKD";
 
 	m_state = ST_REQMKTDATA_ACK;
 	LOG(INFO) << "reqMktData tickerId=" << tickerId << " contract.symbol=" << contract.symbol;
@@ -218,8 +239,7 @@ void PosixTestClient::reqMktData()
 
 void PosixTestClient::reqMktDataAck()
 {
-	sleep(5);
-	m_state = ST_REQMKTDATA;
+	m_state = ST_REQPOSITIONS;
 }
 
 void PosixTestClient::placeOrder()
@@ -315,7 +335,8 @@ long int PosixTestClient::genTickerId()
 
 void PosixTestClient::tickPrice( TickerId tickerId, TickType field, double price, int canAutoExecute)
 {
-	LOG(INFO) << "tickerId="  << tickerId << " price=" << price;
+	if(field == MARK_PRICE)
+		LOG(INFO) << "tickerId="  << tickerId << " field=" << field << " price=" << price;
 }
 void PosixTestClient::tickSize( TickerId tickerId, TickType field, int size) {}
 void PosixTestClient::tickOptionComputation( TickerId tickerId, TickType tickType, double impliedVol, double delta,
@@ -334,7 +355,10 @@ void PosixTestClient::updateAccountValue(const IBString& key, const IBString& va
 void PosixTestClient::updatePortfolio(const Contract& contract, int position,
 		double marketPrice, double marketValue, double averageCost,
 		double unrealizedPNL, double realizedPNL, const IBString& accountName){}
-void PosixTestClient::updateAccountTime(const IBString& timeStamp) {}
+void PosixTestClient::updateAccountTime(const IBString& timeStamp)
+{
+
+}
 void PosixTestClient::accountDownloadEnd(const IBString& accountName) {}
 void PosixTestClient::contractDetails( int reqId, const ContractDetails& contractDetails) {}
 void PosixTestClient::bondContractDetails( int reqId, const ContractDetails& contractDetails) {}
@@ -363,9 +387,68 @@ void PosixTestClient::deltaNeutralValidation(int reqId, const UnderComp& underCo
 void PosixTestClient::tickSnapshotEnd(int reqId) {}
 void PosixTestClient::marketDataType(TickerId reqId, int marketDataType) {}
 void PosixTestClient::commissionReport( const CommissionReport& commissionReport) {}
-void PosixTestClient::position( const IBString& account, const Contract& contract, int position, double avgCost) {}
+void PosixTestClient::position( const IBString& account, const Contract& contract, int position, double avgCost)
+{
+	if(contract.currency == "HKD")
+	{
+		Stock stock;
+		stock.setSymbol(contract.symbol);
+		stock.setMarket("SEHK");
+		stock.setPosition(position);
+		stock.setAvgCost(avgCost);
+		this->getAccount().addStock(contract.symbol, stock);
+	}
+	cout << "Position." << account << "Symbol:" << contract.symbol << "SecType:" << contract.secType <<
+		"Currency:" << contract.currency << "Position:" << position << "Avg cost:" << avgCost << endl;
+}
 void PosixTestClient::positionEnd() {}
 void PosixTestClient::accountSummary( int reqId, const IBString& account, const IBString& tag, const IBString& value, const IBString& curency) {}
 void PosixTestClient::accountSummaryEnd( int reqId) {}
+
+Account PosixTestClient::getAccount()
+{
+	return this->account;
+}
+Stock PosixTestClient::getStock()
+{
+	return this->stock;
+}
+
+IB::Contract PosixTestClient::getContract()
+{
+	return this->contract;
+}
+
+TradeOrder PosixTestClient::getTradeOrder()
+{
+	return this->tradeOrder;
+}
+void PosixTestClient::setAccount(Account& account)
+{
+	this->account = account;
+}
+
+void PosixTestClient::setStock(Stock& stock)
+{
+	this->stock = stock;
+}
+
+void PosixTestClient::setContract(IB::Contract& contract)
+{
+	this->contract = contract;
+}
+
+void PosixTestClient::setTradeOrder(TradeOrder& tradeOrder)
+{
+	this->tradeOrder = tradeOrder;
+}
+
+void PosixTestClient::initTradeData(Account& account, Stock& stock, IB::Contract& contract, TradeOrder& tradeOrder)
+{
+	this->setContract(contract);
+	this->setStock(stock);
+	this->setAccount(account);
+	this->setTradeOrder(tradeOrder);
+}
 
 }
